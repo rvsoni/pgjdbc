@@ -314,6 +314,12 @@ public class PGXAConnection extends PGPooledConnection implements XAConnection, 
         }
     }
 
+    private String currentDatabase() throws SQLException{
+    	DatabaseMetaData metaData = conn.getMetaData();
+    	Properties properties = Driver.parseURL(metaData.getURL(),new Properties());
+    	return properties.getProperty("PGDBNAME");
+    }
+    
     /**
      * Preconditions:
      * 1. flag must be one of TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS or TMSTARTTRSCAN | TMENDRSCAN
@@ -346,7 +352,7 @@ public class PGXAConnection extends PGPooledConnection implements XAConnection, 
                     // except if the transaction is in abort-only state and the
                     // backed refuses to process new queries. Hopefully not a problem
                     // in practise.
-                    ResultSet rs = stmt.executeQuery("SELECT gid FROM pg_prepared_xacts");
+                    ResultSet rs = stmt.executeQuery("SELECT gid FROM pg_prepared_xacts where database = '" + currentDatabase()+"'");
                     LinkedList l = new LinkedList();
                     while (rs.next())
                     {
